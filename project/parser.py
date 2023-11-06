@@ -1,4 +1,6 @@
 import logging
+import time
+from typing import NamedTuple
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
@@ -6,11 +8,26 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from bs4 import BeautifulSoup as BS
 
 
 logging.basicConfig(level=logging.INFO, filename="parser.log", filemode="w",
                     format="[%(asctime)s] - [%(levelname)s] - %(message)s")
 logger = logging.getLogger("parserLogger")
+
+
+class Row(NamedTuple):
+    place: int
+    fio: str
+    gender: str
+    RNI: int
+    birth_date: str
+    city: str
+    tournaments: int
+    main_tournaments: int
+    age: str
+    score: int
+    pay_for_year: str
 
 
 def loggerDecorator(func):
@@ -98,10 +115,58 @@ def paginate(driver: WebDriver) -> WebDriver:
     pagination_button_link_text = "››"
 
     if _check_pagination(driver) == True:
-        driver.find_element(By.LINK_TEXT,
-                                pagination_button_link_text).click()
+        time.sleep(3)
+        driver.find_element(By.LINK_TEXT, pagination_button_link_text).click()
 
     return driver
+
+
+@loggerDecorator
+def get_table(driver: WebDriver) -> WebElement:
+    """Получает таблицу сразу после пагинации по страницам."""
+
+    table_class_name = "tpBody"
+
+    if __check_presence_of_rows(driver) == True:
+        table = driver.find_element(By.CLASS_NAME, table_class_name)
+        logger.info("Таблица была успешно получена!")
+
+        return table
+
+    else:
+        logger.critical("Возникла неизвестная ошибка при попытке получить \
+                таблицу. Производиться выключение программы!")
+        exit(1)
+
+
+@loggerDecorator
+def _formating_table_rows(table: WebElement) -> list[Row]:
+    """Разбивает таблицу на строки и форматирует их."""
+
+    row_tag_name = "tr"
+    cell_tag_name = "td"
+    result_rows = []
+
+    soup = BS(table.get_attribute("outerHTML"), "lxml")
+    rows = soup.findAll(row_tag_name)
+
+    for row in rows:
+        cells = row.findAll(cell_tag_name)
+        result_rows.append(Row(place=int(cells[0].text), fio=cells[1].text,
+                               gender=cells[2].text,RNI=int(cells[3].text),
+                               birth_date=cells[4].text, city=cells[5].text,
+                               tournaments=int(cells[6].text), main_tournaments=int(cells[7].text),
+                               age=cells[8].text, score=int(cells[9].text),
+                               pay_for_year=cells[10].text))
+
+    return result_rows
+
+
+def __print_table_row(rows_list: list[Row]) -> None:
+    """Печатает полученный список строк в консоль"""
+
+    for row in rows_list:
+        print(row, "\n")
 
 
 @loggerDecorator
@@ -129,6 +194,13 @@ def parser_test_run() -> None:
 
     driver = init_parser()
     load_page(driver, url=url)
+    while True:
+        table = get_table(driver)
+        result = _formating_table_rows(table)
+        __print_table_row(result)
+        paginate(driver)
+
+
 
 
 if __name__ == "__main__":
