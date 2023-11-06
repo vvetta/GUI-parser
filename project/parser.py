@@ -19,7 +19,7 @@ def loggerDecorator(func):
 
         value = func(*args, **kwargs)
 
-        logger.info("Функция завершила свою работу.")
+        logger.info(f"Функция '{func.__name__}' завершила свою работу.")
         return value
     return wrapper
 
@@ -44,6 +44,10 @@ def __check_presence_of_rows(driver: WebDriver) -> bool:
         WebDriverWait(driver, load_wait_time).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, row_class_name)))
 
+        rows = driver.find_elements(By.CLASS_NAME, row_class_name)
+
+        logger.debug(f"Строки в количестве {len(rows)} были успешно загружены!")
+
         return True
 
     except TimeoutException:
@@ -64,6 +68,28 @@ def _refresh_page(driver: WebDriver) -> WebDriver:
                 # даже после перезагрузки.
 
     return driver
+
+
+@loggerDecorator
+def _check_pagination(driver: WebDriver) -> bool:
+    """Проверяет наличие кнопки пагинации."""
+
+    presence_wait_time = 60
+    pagination_button_class_name = ""
+
+    try:
+        WebDriverWait(driver, presence_wait_time).until(
+                EC.presence_of_element_located((
+                    By.CLASS_NAME,pagination_button_class_name)))
+
+        logger.debug("Кнопка пагинации присутствует на странице!")
+
+        return True
+
+    except TimeoutException:
+        logger.warning("Кнопка пагинации отсутвует на странице!")
+        return False
+
 
 
 @loggerDecorator
@@ -96,3 +122,4 @@ def parser_test_run() -> None:
 
 if __name__ == "__main__":
     parser_test_run()
+
