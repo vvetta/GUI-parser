@@ -75,12 +75,12 @@ def _check_pagination(driver: WebDriver) -> bool:
     """Проверяет наличие кнопки пагинации."""
 
     presence_wait_time = 60
-    pagination_button_class_name = ""
+    pagination_button_link_text = "››"
 
     try:
         WebDriverWait(driver, presence_wait_time).until(
                 EC.presence_of_element_located((
-                    By.CLASS_NAME,pagination_button_class_name)))
+                    By.LINK_TEXT,pagination_button_link_text)))
 
         logger.debug("Кнопка пагинации присутствует на странице!")
 
@@ -90,6 +90,18 @@ def _check_pagination(driver: WebDriver) -> bool:
         logger.warning("Кнопка пагинации отсутвует на странице!")
         return False
 
+
+@loggerDecorator
+def paginate(driver: WebDriver) -> WebDriver:
+    """Осуществляет пагинацию по страницам таблицы."""
+
+    pagination_button_link_text = "››"
+
+    if _check_pagination(driver) == True:
+        driver.find_element(By.LINK_TEXT,
+                                pagination_button_link_text).click()
+
+    return driver
 
 
 @loggerDecorator
@@ -117,7 +129,6 @@ def parser_test_run() -> None:
 
     driver = init_parser()
     load_page(driver, url=url)
-
 
 
 if __name__ == "__main__":
