@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -42,10 +43,15 @@ def loggerDecorator(func):
 
 
 @loggerDecorator
-def init_parser() -> WebDriver:
+def init_parser(headless: bool = None) -> WebDriver:
     """Функция инициализирующая парсер. """
 
-    driver = webdriver.Chrome()
+    options = Options()
+
+    if headless:
+        options.add_argument("--headless")
+
+    driver = webdriver.Chrome(options=options)
 
     return driver
 
@@ -183,6 +189,7 @@ def load_page(driver: WebDriver, url: str) -> WebDriver:
     return driver
 
 
+@loggerDecorator
 def __get_dates_of_classification(driver: WebDriver) -> list[str]:
     """Получает даты классификации с сайта."""
 
@@ -204,7 +211,7 @@ def __get_dates_of_classification(driver: WebDriver) -> list[str]:
 
     return options
 
-
+@loggerDecorator
 def __get_subjects(driver: WebDriver) -> list[str]:
     """Получает субъекты, которые присутствуют на странице."""
 
@@ -227,7 +234,7 @@ def __get_subjects(driver: WebDriver) -> list[str]:
     return options
 
 
-
+@loggerDecorator
 def __get_federal_districts(driver: WebDriver) -> list[str]:
     """Получает федеральные округа, которые присутствуют на сайте."""
 
@@ -250,6 +257,7 @@ def __get_federal_districts(driver: WebDriver) -> list[str]:
     return options
 
 
+@loggerDecorator
 def get_initial_values(driver: WebDriver):
     """Получает начальные значения перед полноценным запуском программы."""
 
@@ -276,8 +284,6 @@ def parser_test_run() -> None:
         result = _formating_table_rows(table)
         __print_table_row(result)
         paginate(driver)
-
-
 
 
 if __name__ == "__main__":
