@@ -183,6 +183,83 @@ def load_page(driver: WebDriver, url: str) -> WebDriver:
     return driver
 
 
+def __get_dates_of_classification(driver: WebDriver) -> list[str]:
+    """Получает даты классификации с сайта."""
+
+    select_id = "control_8"
+    select_load_wait = 60
+
+    try:
+        WebDriverWait(driver, select_load_wait).until(
+                EC.presence_of_element_located((By.ID, select_id)))
+
+        select = driver.find_element(By.ID, select_id)
+
+    except TimeoutException:
+        logger.critical("Не получилось получить субъекты на сайте!")
+        exit(1)
+
+    soup = BS(select.get_attribute("outerHTML"), "lxml")
+    options = [option.text for option in  soup.findAll('option')]
+
+    return options
+
+
+def __get_subjects(driver: WebDriver) -> list[str]:
+    """Получает субъекты, которые присутствуют на странице."""
+
+    select_id = "control_16"
+    select_load_wait = 60
+
+    try:
+        WebDriverWait(driver, select_load_wait).until(
+                EC.presence_of_element_located((By.ID, select_id)))
+
+        select = driver.find_element(By.ID, select_id)
+
+    except TimeoutException:
+        logger.critical("Не получилось получить субъекты на сайте!")
+        exit(1)
+
+    soup = BS(select.get_attribute("outerHTML"), "lxml")
+    options = [option.text for option in  soup.findAll('option')]
+
+    return options
+
+
+
+def __get_federal_districts(driver: WebDriver) -> list[str]:
+    """Получает федеральные округа, которые присутствуют на сайте."""
+
+    select_id = "control_15"
+    select_load_wait = 60
+
+    try:
+        WebDriverWait(driver, select_load_wait).until(
+                EC.presence_of_element_located((By.ID, select_id)))
+
+        select = driver.find_element(By.ID, select_id)
+
+    except TimeoutException:
+        logger.critical("Не получилось получить значение округов!")
+        exit(1)
+
+    soup = BS(select.get_attribute("outerHTML"), "lxml")
+    options = [option.text for option in soup.findAll('option')]
+
+    return options
+
+
+def get_initial_values(driver: WebDriver):
+    """Получает начальные значения перед полноценным запуском программы."""
+
+    districts = __get_federal_districts(driver)
+    subjects = __get_subjects(driver)
+    dates_of_classification = __get_dates_of_classification(driver)
+
+    return districts, subjects, dates_of_classification
+
+
 def parser_test_run() -> None:
     """
     Функция запускающая парсер в тестовом режиме с выводом результата в консоль.
@@ -204,5 +281,11 @@ def parser_test_run() -> None:
 
 
 if __name__ == "__main__":
-    parser_test_run()
+    # parser_test_run()
+    url = "https://www.rustennistur.ru/csp/rtt/RTTXEN.RatingTable.cls"
 
+    driver = init_parser()
+    load_page(driver, url=url)
+
+    districts, subjects, dates_of_classification = get_initial_values(driver)
+    print(districts, subjects, dates_of_classification)
