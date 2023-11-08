@@ -1,26 +1,19 @@
-import time
-import urllib
+import socket
 
 
 def _ethernet_checker() -> bool:
     """Проверяет наличие интернет соединения"""
 
     try:
-        response = urllib.response("http://google.com")
-        print(response)
+        socket.create_connection(("www.google.com", 80))
         # Тут будет лог о том, что интернет соединение есть!
         return True
 
-    except IOError:
+    except OSError:
         # Тут будет лог о том, что интернет соединения нет!
         return False
 
 
-def initial_checker() -> bool:
-    """Производит базовые проверки перед
-    началом работы парсера"""
-
-
 
 if __name__ == "__main__":
-    pass
+    _ethernet_checker()

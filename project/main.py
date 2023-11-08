@@ -20,8 +20,7 @@ class StartFrame(customtkinter.CTkFrame):
 
 
     def start_func(self):
-        # ethernet = _ethernet_checker()
-        ethernet = False
+        ethernet = _ethernet_checker()
 
         self.start_button.configure(state=customtkinter.DISABLED)
 
@@ -34,10 +33,19 @@ class StartFrame(customtkinter.CTkFrame):
                 self.info_label.configure(text="Округа получены...")
                 app.update()
 
+                time.sleep(0.5)
+
                 self.info_label.configure(text="Субъекты получены...")
                 app.update()
 
+                time.sleep(0.5)
+
                 self.info_label.configure(text="Даты классификации получены...")
+                app.update()
+
+                time.sleep(0.5)
+
+                self.info_label.configure(text="Программа готова к работе!")
                 app.update()
         else:
             self.info_label.configure(text="Интернета нет...")
