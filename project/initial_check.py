@@ -6,7 +6,8 @@ def _ethernet_checker() -> bool:
     """Проверяет наличие интернет соединения"""
 
     try:
-        urllib.urlopen("http://google.com")
+        response = urllib.response("http://google.com")
+        print(response)
         # Тут будет лог о том, что интернет соединение есть!
         return True
 
@@ -22,4 +23,4 @@ def initial_checker() -> bool:
 
 
 if __name__ == "__main__":
-
+    pass
