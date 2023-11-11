@@ -1,8 +1,7 @@
 import time
 import customtkinter
-from parser import *
+import parser
 from tkinter import *
-from PIL import Image
 from initial_check import _ethernet_checker
 
 
@@ -71,9 +70,10 @@ class StartFrame(customtkinter.CTkFrame):
 
         url = "https://www.rustennistur.ru/csp/rtt/RTTXEN.RatingTable.cls"
 
-        driver = init_parser(headless=True)
-        load_page(driver, url)
-        self.districts, self.subjects, self.dates_of_classification = get_initial_values(driver)
+        driver = parser.init_parser()
+        parser.load_page(driver, url)
+        self.districts, self.subjects, self.dates_of_classification = parser.get_initial_values(driver)
+        driver.close()
 
 
     def print_init_values(self):
@@ -87,9 +87,8 @@ class MainFrame(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        start_button_image = customtkinter.CTkImage(dark_image=Image.open("Buttons png/start_button.png"), size=(200, 80))
-
-        self.start_button = customtkinter.CTkButton(self, text='Запуск', width=200, height=80, font=('Arial', 24))
+        self.start_button = customtkinter.CTkButton(self, text='Запуск', width=200, height=80, font=('Arial', 24),
+                                                    command=self.parsing)
         self.start_button.grid(row=0, column=0, padx=40, pady=40, sticky="nsew")
 
         self.configure_button = customtkinter.CTkButton(self, text="Добавить критерии выборки ->",
@@ -100,7 +99,24 @@ class MainFrame(customtkinter.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
 
-    
+    def parsing(self):
+        url = "https://www.rustennistur.ru/csp/rtt/RTTXEN.RatingTable.cls"
+        driver = parser.init_parser()
+        parser.load_page(driver, url=url)
+        self.k = 0
+
+        while True:
+
+            table = parser.get_table(driver)
+            result = parser._formating_table_rows(table)
+            print(result[-1])
+
+            if parser.check_out_of_range_page(driver, master=self) == False:
+                print("программа отработала!!!!")
+                break
+            parser.paginate(driver)
+
+        driver.close()
 
 
 class UploadFrame(customtkinter.CTkFrame):

@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, InvalidSessionIdException, StaleElementReferenceException
 from bs4 import BeautifulSoup as BS
 
 
@@ -97,12 +97,14 @@ def _refresh_page(driver: WebDriver) -> WebDriver:
 def _check_pagination(driver: WebDriver) -> bool:
     """Проверяет наличие кнопки пагинации."""
 
-    presence_wait_time = 60
+    presence_wait_time = 5
     pagination_button_link_text = "››"
 
+
     try:
+
         WebDriverWait(driver, presence_wait_time).until(
-                EC.presence_of_element_located((
+                EC.element_to_be_clickable((
                     By.LINK_TEXT,pagination_button_link_text)))
 
         logger.debug("Кнопка пагинации присутствует на странице!")
@@ -110,21 +112,38 @@ def _check_pagination(driver: WebDriver) -> bool:
         return True
 
     except TimeoutException:
-        logger.warning("Кнопка пагинации отсутвует на странице!")
+        logger.warning("Пагинация невозможна")
         return False
+
+@loggerDecorator
+def check_out_of_range_page(driver: WebDriver, master) -> bool:
+
+    pagination_button_disabled = "tnbrPageLinkDisabled"
+
+    try:
+        WebDriverWait(driver, 2).until(
+                EC.presence_of_all_elements_located((
+                    By.CLASS_NAME, pagination_button_disabled)))
+
+        master.k += 1
+        print(master.k)
+
+        if master.k == 2:
+            return False
+
+    except TimeoutException:
+        return True
 
 
 @loggerDecorator
-def paginate(driver: WebDriver) -> WebDriver:
+def paginate(driver: WebDriver):
     """Осуществляет пагинацию по страницам таблицы."""
 
     pagination_button_link_text = "››"
 
     if _check_pagination(driver) == True:
-        time.sleep(3)
         driver.find_element(By.LINK_TEXT, pagination_button_link_text).click()
-
-    return driver
+        time.sleep(2)
 
 
 @loggerDecorator
@@ -154,6 +173,7 @@ def _formating_table_rows(table: WebElement) -> list[Row]:
     result_rows = []
 
     soup = BS(table.get_attribute("outerHTML"), "lxml")
+
     rows = soup.findAll(row_tag_name)
 
     for row in rows:
@@ -168,7 +188,7 @@ def _formating_table_rows(table: WebElement) -> list[Row]:
     return result_rows
 
 
-def __print_table_row(rows_list: list[Row]) -> None:
+def _print_table_row(rows_list: list[Row]) -> None:
     """Печатает полученный список строк в консоль"""
 
     for row in rows_list:
@@ -282,7 +302,7 @@ def parser_test_run() -> None:
     while True:
         table = get_table(driver)
         result = _formating_table_rows(table)
-        __print_table_row(result)
+        _print_table_row(result)
         paginate(driver)
 
 
