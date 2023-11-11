@@ -1,17 +1,22 @@
 import time
 import customtkinter
 from parser import *
+from tkinter import *
+from PIL import Image
 from initial_check import _ethernet_checker
 
 
 class StartFrame(customtkinter.CTkFrame):
+    """Стартовый фрейм, в котором проходят стартовые проверки и перенаправление на главный фрейм"""
+
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
-        self.info_label = customtkinter.CTkLabel(self, width=200, height=80, text='', font=('Arial', 24))
+        self.info_label = customtkinter.CTkLabel(self, width=200, height=80, text='', font=('Arial', 24),)
         self.info_label.grid(row=0, column=0, padx=40, pady=40, sticky="nsew")
 
-        self.start_button = customtkinter.CTkButton(self, text="Запуск",
+        self.start_button = customtkinter.CTkButton(self, text="Запуск", font=('Arial', 24),
                                                     width=200, height=80, command=self.start_func)
         self.start_button.grid(row=1, column=0, padx=40, pady=40, sticky="nsew")
 
@@ -47,6 +52,14 @@ class StartFrame(customtkinter.CTkFrame):
 
                 self.info_label.configure(text="Программа готова к работе!")
                 app.update()
+
+                self.info_label.grid_remove()
+                self.start_button.grid_remove()
+
+                self.main_frame = MainFrame(master=self)
+                self.main_frame.grid(row=0, column=0, sticky="nsew")
+
+
         else:
             self.info_label.configure(text="Интернета нет...")
             app.update()
@@ -67,17 +80,49 @@ class StartFrame(customtkinter.CTkFrame):
         print(self.districts, self.subjects, self.dates_of_classification)
 
 
-
-
 class MainFrame(customtkinter.CTkFrame):
+    """Основной фрейм, в котором будет происходить парсинг и переключение по другим фреймам"""
+
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+
+        start_button_image = customtkinter.CTkImage(dark_image=Image.open("Buttons png/start_button.png"), size=(200, 80))
+
+        self.start_button = customtkinter.CTkButton(self, text='Запуск', width=200, height=80, font=('Arial', 24))
+        self.start_button.grid(row=0, column=0, padx=40, pady=40, sticky="nsew")
+
+        self.configure_button = customtkinter.CTkButton(self, text="Добавить критерии выборки ->",
+                                                        width=200, height=50, font=('Arial', 18),)
+        self.configure_button.grid(row=1, column=0, padx=40, pady=40 ,sticky="nsew")
+
+        self.grid_rowconfigure(0, weight=1)  # configure grid system
+        self.grid_columnconfigure(0, weight=1)
+
+
+    
+
+
+class UploadFrame(customtkinter.CTkFrame):
+    """Фрейм, в котором можно будет скачать готовый файл"""
+
+
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
 
-# Hello!
+class ConfigureFrame(customtkinter.CTkFrame):
+    """Фрейм, в котором будут настройки выборки"""
+
+
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
 
 
 class App(customtkinter.CTk):
+    """Глвный класс приложения"""
+
+
     def __init__(self):
         super().__init__()
 
