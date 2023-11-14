@@ -10,6 +10,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, InvalidSessionIdException, StaleElementReferenceException
 from bs4 import BeautifulSoup as BS
+from selenium.webdriver.support.ui import Select
 
 
 logging.basicConfig(level=logging.INFO, filename="parser.log", filemode="w",
@@ -278,14 +279,122 @@ def __get_federal_districts(driver: WebDriver) -> list[str]:
 
 
 @loggerDecorator
+def __get_genders(driver: WebDriver) -> list[str]:
+    """Получает все гендеры, которые представлены на сайте."""
+
+    select_id = "filter1_SEX_34"
+    select_load_wait = 60
+
+    try:
+        WebDriverWait(driver, select_load_wait).until(
+                        EC.presence_of_element_located((By.ID, select_id)))
+
+        select = driver.find_element(By.ID, select_id)
+
+    except TimeoutException:
+        logger.critical("Не получилось получить значение округов!")
+        exit(1)
+
+    soup = BS(select.get_attribute("outerHTML"), "lxml")
+    options = [option.text for option in soup.findAll('option')]
+
+    return options
+
+
+@loggerDecorator
+def __get_birth_groups(driver: WebDriver) -> list[str]:
+    """Получает все возрастные группы, которые представленны на сайте."""
+
+    select_id = "filter1_agegroup_34"
+    select_load_wait = 60
+
+    try:
+        WebDriverWait(driver, select_load_wait).until(
+                        EC.presence_of_element_located((By.ID, select_id)))
+
+        select = driver.find_element(By.ID, select_id)
+
+    except TimeoutException:
+        logger.critical("Не получилось получить значение округов!")
+        exit(1)
+
+    soup = BS(select.get_attribute("outerHTML"), "lxml")
+    options = [option.text for option in soup.findAll('option')]
+
+    return options
+
+
+
+@loggerDecorator
 def get_initial_values(driver: WebDriver):
     """Получает начальные значения перед полноценным запуском программы."""
 
     districts = __get_federal_districts(driver)
     subjects = __get_subjects(driver)
     dates_of_classification = __get_dates_of_classification(driver)
+    birth_groups = __get_birth_groups(driver)
+    genders = __get_genders(driver)
 
-    return districts, subjects, dates_of_classification
+
+    return districts, subjects, dates_of_classification, birth_groups, \
+            genders
+
+
+@loggerDecorator
+def set_options_to_parser(driver: WebDriver, district: str, subject: str,
+                          date: str, birth_group: str, gender: str, city: str,
+                          fio: str, RNI: int) -> None:
+    """Устанавливает выборку для парсинга."""
+
+    print(district, subject, date, birth_group, gender, city, fio, RNI)
+
+    district_select_id = 'control_15'
+    subject_select_id = 'control_16'
+    date_select_id = 'control_8'
+    birth_group_select_id = 'filter1_agegroup_34'
+    gender_select_id = 'filter1_SEX_34'
+
+    city_input_id = 'filter1_City_34'
+    fio_input_id = 'filter1_FIO_34'
+    RNI_input_id = 'filter1_RegNum_34'
+
+    submit_button_id = 'control_10'
+
+    if __check_presence_of_rows(driver) != True:
+        exit(1)
+
+    if district != '':
+        select = Select(driver.find_element(By.ID, district_select_id))
+        select.select_by_visible_text(district)
+
+    if subject != '':
+        select = Select(driver.find_element(By.ID, subject_select_id))
+        select.select_by_visible_text(subject)
+
+    if date != '':
+        select = Select(driver.find_element(By.ID, date_select_id))
+        select.select_by_visible_text(date)
+
+    if birth_group != '':
+        select = Select(driver.find_element(By.ID, birth_group_select_id))
+        select.select_by_visible_text(birth_group)
+
+    if gender != '':
+        select = Select(driver.find_element(By.ID, gender_select_id))
+        select.select_by_visible_text(gender)
+
+    if city != '':
+        driver.find_element(By.ID, city_input_id).send_keys(city)
+
+    if fio != '':
+        print(fio)
+        driver.find_element(By.ID, fio_input_id).send_keys(fio)
+
+    if RNI != 0:
+        driver.find_element(By.ID, RNI_input_id).send_keys(RNI)
+
+
+    driver.find_element(By.ID, submit_button_id).click()
 
 
 def parser_test_run() -> None:
