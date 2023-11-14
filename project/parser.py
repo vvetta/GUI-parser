@@ -126,8 +126,12 @@ def check_out_of_range_page(driver: WebDriver, master) -> bool:
                 EC.presence_of_all_elements_located((
                     By.CLASS_NAME, pagination_button_disabled)))
 
+        disabled_btns = driver.find_elements(By.CLASS_NAME, pagination_button_disabled)
+
+        if len(disabled_btns) == 4:
+            return False
+
         master.k += 1
-        print(master.k)
 
         if master.k == 2:
             return False
@@ -339,14 +343,28 @@ def get_initial_values(driver: WebDriver):
     return districts, subjects, dates_of_classification, birth_groups, \
             genders
 
+def set_rows_on_page(driver: WebDriver) -> None:
+    """Устанавливает количество строк таблицы на странице."""
+
+    rows_on_page_id = 'pgsize_9'
+    submit_button_id = 'control_10'
+
+    input_rows = driver.find_element(By.ID, rows_on_page_id)
+    input_rows.clear()
+    time.sleep(5)
+    input_rows.send_keys("500")
+
+    driver.find_element(By.ID, submit_button_id).click()
+    time.sleep(5)
+
+
+
 
 @loggerDecorator
 def set_options_to_parser(driver: WebDriver, district: str, subject: str,
                           date: str, birth_group: str, gender: str, city: str,
                           fio: str, RNI: int) -> None:
     """Устанавливает выборку для парсинга."""
-
-    print(district, subject, date, birth_group, gender, city, fio, RNI)
 
     district_select_id = 'control_15'
     subject_select_id = 'control_16'
@@ -387,7 +405,6 @@ def set_options_to_parser(driver: WebDriver, district: str, subject: str,
         driver.find_element(By.ID, city_input_id).send_keys(city)
 
     if fio != '':
-        print(fio)
         driver.find_element(By.ID, fio_input_id).send_keys(fio)
 
     if RNI != 0:

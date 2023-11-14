@@ -130,6 +130,8 @@ class MainFrame(customtkinter.CTkFrame):
                                          app.actual_date, app.actual_birth_group,
                                          app.actual_gender, app.city, app.fio, app.RNI)
 
+        parser.set_rows_on_page(driver)
+
         self.k = 0
 
         excel_file_name = 'output.xlsx'
@@ -149,11 +151,9 @@ class MainFrame(customtkinter.CTkFrame):
 
             table = parser.get_table(driver)
             result = parser._formating_table_rows(table)
-            print(result[-1])
             save_list_data_to_excel(result, ws)
 
             if parser.check_out_of_range_page(driver, master=self) == False:
-                print("программа отработала!!!!")
                 break
             parser.paginate(driver)
 
